@@ -5,56 +5,93 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.foodapp.R
+import com.example.foodapp.databinding.FragmentRecipeBinding
+import com.example.foodapp.ui.adapters.RecipesAdapter
+import com.example.foodapp.ui.viewmodel.MainViewModel
+import com.example.foodapp.ui.viewmodel.RecipesViewModel
+import com.example.foodapp.utils.NetworkResult
+import dagger.hilt.android.AndroidEntryPoint
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [RecipeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+@AndroidEntryPoint
 class RecipeFragment : Fragment() {
-  // TODO: Rename and change types of parameters
-  private var param1: String? = null
-  private var param2: String? = null
+
+  private var mBinding: FragmentRecipeBinding? = null
+  private val binding get() = mBinding!!
+
+  private lateinit var mainViewModel: MainViewModel
+  private lateinit var recipesViewModel: RecipesViewModel
+
+  private val mAdapter by lazy { RecipesAdapter() }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    arguments?.let {
-      param1 = it.getString(ARG_PARAM1)
-      param2 = it.getString(ARG_PARAM2)
-    }
+    mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
+    recipesViewModel = ViewModelProvider(requireActivity())[RecipesViewModel::class.java]
   }
 
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? {
-    // Inflate the layout for this fragment
-    return inflater.inflate(R.layout.fragment_recipe, container, false)
+  ): View {
+    mBinding = FragmentRecipeBinding.inflate(layoutInflater)
+    binding.recyclerview.showShimmer()
+
+    setupRecyclerView()
+    requestApiData()
+    return binding.root
   }
 
-  companion object {
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment RecipeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    @JvmStatic
-    fun newInstance(param1: String, param2: String) =
-      RecipeFragment().apply {
-        arguments = Bundle().apply {
-          putString(ARG_PARAM1, param1)
-          putString(ARG_PARAM2, param2)
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+
+  }
+
+  private fun requestApiData() {
+    mainViewModel.getRecipes(recipesViewModel.applyQueries())
+    mainViewModel.recipesResponse.observe(viewLifecycleOwner) { response ->
+      when (response) {
+        is NetworkResult.Success -> {
+          hideShimmerEffect()
+          response.data?.let { mAdapter.setData(it) }
+        }
+        is NetworkResult.Error -> {
+          hideShimmerEffect()
+          Toast.makeText(
+            requireContext(),
+            response.message.toString(),
+            Toast.LENGTH_SHORT
+          ).show()
+        }
+        is NetworkResult.Loading -> {
+          showShimmerEffect()
         }
       }
+    }
   }
+
+  private fun setupRecyclerView() {
+   binding.recyclerview.adapter = mAdapter
+    binding.recyclerview.layoutManager = LinearLayoutManager(requireContext())
+    showShimmerEffect()
+  }
+
+  private fun showShimmerEffect() {
+    binding.recyclerview.showShimmer()
+  }
+
+  private fun hideShimmerEffect() {
+    binding.recyclerview.hideShimmer()
+  }
+
+
+  override fun onDestroy() {
+    super.onDestroy()
+    mBinding = null
+  }
+
+
 }

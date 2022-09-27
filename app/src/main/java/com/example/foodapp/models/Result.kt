@@ -2,7 +2,7 @@ package com.example.foodapp.models
 
 import com.google.gson.annotations.SerializedName
 
-data class ResultR(
+data class Result(
   @SerializedName("aggregateLikes")
   val aggregateLikes: Int,
   @SerializedName("cheap")
