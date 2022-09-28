@@ -1,12 +1,14 @@
 package com.example.foodapp.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.foodapp.R
 import com.example.foodapp.databinding.FragmentRecipeBinding
@@ -14,7 +16,9 @@ import com.example.foodapp.ui.adapters.RecipesAdapter
 import com.example.foodapp.ui.viewmodel.MainViewModel
 import com.example.foodapp.ui.viewmodel.RecipesViewModel
 import com.example.foodapp.utils.NetworkResult
+import com.example.foodapp.utils.observeOnce
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class RecipeFragment : Fragment() {
@@ -38,19 +42,35 @@ class RecipeFragment : Fragment() {
     savedInstanceState: Bundle?
   ): View {
     mBinding = FragmentRecipeBinding.inflate(layoutInflater)
-    binding.recyclerview.showShimmer()
-
-    setupRecyclerView()
-    requestApiData()
+    binding.lifecycleOwner = this
+    binding.mainViewModel = mainViewModel
     return binding.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    binding.recyclerview.showShimmer()
 
+    setupRecyclerView()
+    readDatabase()
+  }
+
+  private fun readDatabase() {
+   lifecycleScope.launch {
+     mainViewModel.readRecipes.observeOnce(viewLifecycleOwner){ database ->
+       if(database.isNotEmpty()) {
+         Log.d("TAG", "readDatabase: called ")
+         mAdapter.setData(database[0].foodRecipe)
+         hideShimmerEffect()
+       }else {
+         requestApiData()
+       }
+     }
+   }
   }
 
   private fun requestApiData() {
+    Log.d("TAG", "requestApiData: called ")
     mainViewModel.getRecipes(recipesViewModel.applyQueries())
     mainViewModel.recipesResponse.observe(viewLifecycleOwner) { response ->
       when (response) {
@@ -60,6 +80,7 @@ class RecipeFragment : Fragment() {
         }
         is NetworkResult.Error -> {
           hideShimmerEffect()
+          loadDataFromCache()
           Toast.makeText(
             requireContext(),
             response.message.toString(),
@@ -87,6 +108,15 @@ class RecipeFragment : Fragment() {
     binding.recyclerview.hideShimmer()
   }
 
+  private fun loadDataFromCache() {
+   lifecycleScope.launch {
+     mainViewModel.readRecipes.observe(viewLifecycleOwner){database ->
+       if(database.isNotEmpty()) {
+         mAdapter.setData(database[0].foodRecipe)
+       }
+     }
+   }
+  }
 
   override fun onDestroy() {
     super.onDestroy()
