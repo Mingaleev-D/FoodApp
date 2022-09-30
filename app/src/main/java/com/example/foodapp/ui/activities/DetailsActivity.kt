@@ -12,6 +12,7 @@ import com.example.foodapp.ui.adapters.PagerAdapter
 import com.example.foodapp.ui.fragments.IngredientsFragment
 import com.example.foodapp.ui.fragments.InstructionsFragment
 import com.example.foodapp.ui.fragments.OverviewFragment
+import com.example.foodapp.utils.Constants.RECIPE_RESULT_KEY
 
 class DetailsActivity : AppCompatActivity() {
   private lateinit var binding: ActivityDetailsBinding
@@ -38,7 +39,7 @@ class DetailsActivity : AppCompatActivity() {
     titles.add("Instructions")
 
     val resultBundle = Bundle()
-    resultBundle.putParcelable("recipeBundle", args.result)
+    resultBundle.putParcelable(RECIPE_RESULT_KEY, args.result)
 
     val adapter = PagerAdapter(
       resultBundle,

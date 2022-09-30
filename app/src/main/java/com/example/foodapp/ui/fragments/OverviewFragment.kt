@@ -21,11 +21,6 @@ class OverviewFragment : Fragment() {
   private var mBinding: FragmentOverviewBinding? = null
   private val binding get() = mBinding!!
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-
-  }
-
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?,
     savedInstanceState: Bundle?
@@ -38,7 +33,8 @@ class OverviewFragment : Fragment() {
     super.onViewCreated(view, savedInstanceState)
 
     val args = arguments
-    val myBundle: com.example.foodapp.models.Result = args!!.getParcelable<Result>("recipeBundle") as Result
+    val myBundle: com.example.foodapp.models.Result =
+      args!!.getParcelable<Result>(RECIPE_RESULT_KEY) as Result
 
     binding.mainImageView.load(myBundle.image)
     binding.titleTextView.text = myBundle.title
