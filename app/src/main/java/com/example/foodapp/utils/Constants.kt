@@ -14,6 +14,9 @@ object Constants {
 
   const val QUERY_SEARCH = "query"
 
+  const val RECIPE_RESULT_KEY = "recipeBundle"
+  const val BASE_IMAGE_URL = "https://spoonacular.com/cdn/ingredients_100x100/"
+
   //Room Database
   const val DATABASE_NAME = "recipes_database"
   const val RECIPES_TABLE = "recipes_table"
